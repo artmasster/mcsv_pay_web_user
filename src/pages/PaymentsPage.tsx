@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { api } from '../api/client'
+import { Receipt } from 'lucide-react'
+import { api } from '@/api/client'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
+import { LinkButton } from '@/components/ui/link-button'
+import { PageHeader } from '@/components/ui/page-header'
+import { Table, TableWrap, Tbody, Td, Th, Thead, Tr } from '@/components/ui/table'
 
 type PayRow = {
   id: string
@@ -13,10 +19,13 @@ type PayRow = {
 }
 
 function payBadge(status: string) {
-  if (status === 'completed') return <span className="badge badge-success">completed</span>
-  if (status === 'pending') return <span className="badge badge-warn">pending</span>
-  if (status === 'cancelled') return <span className="badge badge-muted">cancelled</span>
-  return <span className="badge badge-muted">{status}</span>
+  if (status === 'completed')
+    return <Badge variant="success">completed</Badge>
+  if (status === 'pending')
+    return <Badge variant="warning">pending</Badge>
+  if (status === 'cancelled')
+    return <Badge>cancelled</Badge>
+  return <Badge>{status}</Badge>
 }
 
 export function PaymentsPage() {
@@ -35,51 +44,61 @@ export function PaymentsPage() {
   }, [])
 
   return (
-    <div>
-      <h1 className="page-title">ธุรกรรม</h1>
-      <p className="page-desc">
-        ทั้งหมด <strong>{total}</strong> รายการ · แสดงล่าสุดสูงสุด 50 รายการ
-      </p>
-      {err ? <div className="err">{err}</div> : null}
-      <div className="card">
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>สถานะ</th>
-                <th>ยอดโอน</th>
-                <th>อ้างอิง</th>
-                <th>เวลา</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((p) => (
-                <tr key={p.id}>
-                  <td>{payBadge(p.status)}</td>
-                  <td style={{ fontWeight: 600 }}>฿{p.amount_with_decimal}</td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                    {p.client_reference || '—'}
-                  </td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>{p.created_at || '—'}</td>
-                  <td>
-                    <Link
-                      to={`/dashboard/payments/${p.id}`}
-                      className="btn btn-secondary btn-sm"
-                      style={{ textDecoration: 'none' }}
-                    >
-                      รายละเอียด
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {items.length === 0 && !err ? (
-          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0' }}>ยังไม่มีธุรกรรม</p>
+    <div className="space-y-6">
+      <PageHeader
+        title="ธุรกรรม"
+        description={
+          <>
+            ทั้งหมด <strong>{total}</strong> รายการ · แสดงล่าสุดสูงสุด 50 รายการ
+          </>
+        }
+      />
+      {err ? <Alert variant="error">{err}</Alert> : null}
+      <Card>
+        {items.length > 0 ? (
+          <TableWrap>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>สถานะ</Th>
+                  <Th>ยอดโอน</Th>
+                  <Th>อ้างอิง</Th>
+                  <Th>เวลา</Th>
+                  <Th className="w-32" />
+                </Tr>
+              </Thead>
+              <Tbody>
+                {items.map((p) => (
+                  <Tr key={p.id}>
+                    <Td>{payBadge(p.status)}</Td>
+                    <Td className="font-semibold tabular-nums">฿{p.amount_with_decimal}</Td>
+                    <Td className="text-sm text-slate-500">
+                      {p.client_reference || '—'}
+                    </Td>
+                    <Td className="whitespace-nowrap text-xs text-slate-500">{p.created_at || '—'}</Td>
+                    <Td>
+                      <LinkButton
+                        to={`/dashboard/payments/${p.id}`}
+                        variant="secondary"
+                        size="sm"
+                      >
+                        รายละเอียด
+                      </LinkButton>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </TableWrap>
+        ) : !err ? (
+          <div className="flex flex-col items-center gap-3 py-12 text-center">
+            <div className="flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+              <Receipt className="size-6" />
+            </div>
+            <p className="text-sm text-slate-500">ยังไม่มีธุรกรรม</p>
+          </div>
         ) : null}
-      </div>
+      </Card>
     </div>
   )
 }

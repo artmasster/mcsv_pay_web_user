@@ -1,6 +1,20 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api } from '../api/client'
+import { ArrowLeft, KeyRound, Plus, Receipt, RefreshCw, Webhook, X } from 'lucide-react'
+import { api } from '@/api/client'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardTitle } from '@/components/ui/card'
+import { Code } from '@/components/ui/code'
+import { Input } from '@/components/ui/input'
+import {
+  TabList,
+  TabPanel,
+  Tabs,
+  TabTrigger,
+} from '@/components/ui/tabs'
+import { Table, TableWrap, Tbody, Td, Th, Thead, Tr } from '@/components/ui/table'
 
 type KeyRow = {
   id: string
@@ -90,103 +104,154 @@ export function AppDetailPage() {
   }
 
   return (
-    <div>
-      <Link to="/dashboard" className="back-link" style={{ textDecoration: 'none' }}>
-        ← กลับไปแอปทั้งหมด
+    <div className="space-y-6">
+      <Link
+        to="/dashboard"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 no-underline hover:text-blue-700"
+      >
+        <ArrowLeft className="size-3.5" />
+        กลับไปแอปทั้งหมด
       </Link>
-      <h1 className="page-title">จัดการแอป</h1>
-      <p className="page-desc">
-        รหัสแอป <code className="inline">{id?.slice(0, 8)}…</code>
-      </p>
-
-      <div className="card" style={{ marginBottom: '1.25rem' }}>
-        <h2 style={{ margin: '0 0 0.75rem', fontSize: '1.05rem', fontWeight: 600 }}>Webhook URL</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: '0 0 1rem', lineHeight: 1.55 }}>
-          ระบบจะส่ง <code className="inline">POST</code> JSON พร้อมหัว <code className="inline">X-PGW-Signature</code>{' '}
-          (HMAC-SHA256 ของ <code className="inline">timestamp.body</code>)
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">จัดการแอป</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          รหัสแอป <Code>{id?.slice(0, 8)}…</Code>
         </p>
-        <input
-          className="input"
-          value={webhookUrl}
-          onChange={(e) => setWebhookUrl(e.target.value)}
-          placeholder="https://api.example.com/webhooks/pgw"
-          style={{ marginBottom: '0.75rem' }}
-        />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <button type="button" className="btn btn-primary" onClick={saveWebhook}>
-            บันทึก URL
-          </button>
-          <button type="button" className="btn btn-secondary" onClick={rotateWh}>
-            หมุน webhook secret
-          </button>
-        </div>
-        {whSecret ? (
-          <div className="secret-box" style={{ marginTop: '0.75rem' }}>
-            <strong style={{ color: 'var(--text)' }}>webhook_secret ใหม่:</strong> {whSecret}
-          </div>
-        ) : null}
       </div>
 
-      <div className="card">
-        <h2 style={{ margin: '0 0 0.75rem', fontSize: '1.05rem', fontWeight: 600 }}>API keys</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: '0 0 1rem' }}>
-          ใช้ใน header <code className="inline">Authorization: Bearer pgw_sk_…</code> — แสดงค่าเต็มครั้งเดียวตอนสร้าง
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-          <input
-            className="input"
-            style={{ flex: '1 1 200px', margin: 0 }}
-            placeholder="ชื่อคีย์ (ไม่บังคับ)"
-            value={keyName}
-            onChange={(e) => setKeyName(e.target.value)}
-          />
-          <button type="button" className="btn btn-primary" onClick={createKey}>
-            สร้างคีย์ใหม่
-          </button>
-        </div>
-        {newKey ? (
-          <div className="success-banner" style={{ marginBottom: '1rem' }}>
-            <strong>คัดลอกเก็บไว้ทันที</strong> — จะไม่แสดงอีก: <span style={{ wordBreak: 'break-all' }}>{newKey}</span>
-          </div>
-        ) : null}
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Prefix</th>
-                <th>ชื่อ</th>
-                <th>สร้างเมื่อ</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {keys.map((k) => (
-                <tr key={k.id}>
-                  <td>
-                    <code className="inline">{k.key_prefix}…</code>
-                  </td>
-                  <td>{k.name || '—'}</td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{k.created_at || '—'}</td>
-                  <td>
-                    {!k.revoked_at ? (
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => revokeKey(k.id)}>
-                        ยกเลิก
-                      </button>
-                    ) : (
-                      <span className="badge badge-muted">ยกเลิกแล้ว</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {err ? <Alert variant="error">{err}</Alert> : null}
 
-      {err ? <div className="err" style={{ marginTop: '1rem' }}>{err}</div> : null}
+      <Tabs defaultValue="webhook">
+        <TabList aria-label="ส่วนจัดการแอป">
+          <TabTrigger value="webhook">
+            <Webhook className="size-3.5" />
+            Webhook
+          </TabTrigger>
+          <TabTrigger value="keys">
+            <KeyRound className="size-3.5" />
+            API keys
+          </TabTrigger>
+        </TabList>
+        <TabPanel value="webhook">
+          <Card>
+            <CardTitle className="flex items-center gap-2">
+              <Webhook className="size-4 text-blue-600" />
+              Webhook URL
+            </CardTitle>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              ระบบจะส่ง <Code>POST</Code> JSON พร้อมหัว <Code>X-PGW-Signature</Code>{' '}
+              (HMAC-SHA256 ของ <Code>timestamp.body</Code>)
+            </p>
+            <Input
+              className="mt-4"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              placeholder="https://api.example.com/webhooks/pgw"
+            />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button type="button" onClick={saveWebhook}>
+                บันทึก URL
+              </Button>
+              <Button type="button" variant="secondary" onClick={rotateWh} className="gap-1.5">
+                <RefreshCw className="size-3.5" />
+                หมุน webhook secret
+              </Button>
+            </div>
+            {whSecret ? (
+              <Alert variant="success" className="mt-4">
+                <span className="font-semibold text-emerald-900">webhook_secret ใหม่:</span>{' '}
+                <span className="break-all font-mono text-xs">{whSecret}</span>
+              </Alert>
+            ) : null}
+          </Card>
+        </TabPanel>
+        <TabPanel value="keys">
+          <Card>
+            <CardTitle className="flex items-center gap-2">
+              <KeyRound className="size-4 text-blue-600" />
+              API keys
+            </CardTitle>
+            <p className="mt-2 text-sm text-slate-600">
+              ใช้ใน header <Code>Authorization: Bearer pgw_sk_…</Code> — แสดงค่าเต็มครั้งเดียวตอนสร้าง
+            </p>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Input
+                className="min-w-0 flex-1 sm:max-w-xs"
+                placeholder="ชื่อคีย์ (ไม่บังคับ)"
+                value={keyName}
+                onChange={(e) => setKeyName(e.target.value)}
+              />
+              <Button type="button" onClick={createKey} className="w-full gap-1.5 sm:w-auto">
+                <Plus className="size-4" />
+                สร้างคีย์ใหม่
+              </Button>
+            </div>
+            {newKey ? (
+              <Alert variant="success" className="mt-4">
+                <strong>คัดลอกเก็บไว้ทันที</strong> — จะไม่แสดงอีก:{' '}
+                <span className="break-all font-mono text-xs">{newKey}</span>
+              </Alert>
+            ) : null}
+            {keys.length > 0 ? (
+              <TableWrap className="mt-4">
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Prefix</Th>
+                      <Th>ชื่อ</Th>
+                      <Th>สร้างเมื่อ</Th>
+                      <Th />
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {keys.map((k) => (
+                      <Tr key={k.id}>
+                        <Td>
+                          <Code>{k.key_prefix}…</Code>
+                        </Td>
+                        <Td>{k.name || '—'}</Td>
+                        <Td className="text-sm text-slate-500">{k.created_at || '—'}</Td>
+                        <Td>
+                          {!k.revoked_at ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => revokeKey(k.id)}
+                              className="gap-1 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            >
+                              <X className="size-3.5" />
+                              ยกเลิก
+                            </Button>
+                          ) : (
+                            <Badge>ยกเลิกแล้ว</Badge>
+                          )}
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TableWrap>
+            ) : (
+              <div className="mt-6 flex flex-col items-center gap-3 py-6 text-center">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+                  <KeyRound className="size-5" />
+                </div>
+                <p className="text-sm text-slate-500">ยังไม่มี API key — สร้างคีย์แรกด้านบน</p>
+              </div>
+            )}
+          </Card>
+        </TabPanel>
+      </Tabs>
 
-      <p style={{ marginTop: '1.5rem' }}>
-        <Link to="/dashboard/payments">ดูธุรกรรมทั้งหมด →</Link>
+      <p className="text-sm">
+        <Link
+          to="/dashboard/payments"
+          className="inline-flex items-center gap-1.5 font-medium text-blue-600 no-underline hover:text-blue-700"
+        >
+          <Receipt className="size-3.5" />
+          ดูธุรกรรมทั้งหมด
+        </Link>
       </p>
     </div>
   )

@@ -7,6 +7,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { AppDetailPage } from './pages/AppDetailPage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import { PaymentDetailPage } from './pages/PaymentDetailPage'
+import { SecurityPage } from './pages/SecurityPage'
 
 function Private({ children }: { children: React.ReactNode }) {
   const t = localStorage.getItem('pgw_merchant_token')
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="apps/:id" element={<AppDetailPage />} />
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="payments/:paymentId" element={<PaymentDetailPage />} />
+          <Route path="security" element={<SecurityPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

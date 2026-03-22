@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { api } from '../api/client'
+import { Boxes, Plus } from 'lucide-react'
+import { api } from '@/api/client'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardTitle } from '@/components/ui/card'
+import { Code } from '@/components/ui/code'
+import { FormField } from '@/components/ui/form-field'
+import { Input } from '@/components/ui/input'
+import { LinkButton } from '@/components/ui/link-button'
+import { PageHeader } from '@/components/ui/page-header'
+import { Table, TableWrap, Tbody, Td, Th, Thead, Tr } from '@/components/ui/table'
 
 type AppRow = {
   id: string
@@ -10,9 +20,11 @@ type AppRow = {
 }
 
 function statusBadge(status: string) {
-  if (status === 'active') return <span className="badge badge-success">active</span>
-  if (status === 'suspended') return <span className="badge badge-danger">suspended</span>
-  return <span className="badge badge-muted">{status}</span>
+  if (status === 'active')
+    return <Badge variant="success">active</Badge>
+  if (status === 'suspended')
+    return <Badge variant="danger">suspended</Badge>
+  return <Badge>{status}</Badge>
 }
 
 export function DashboardPage() {
@@ -56,87 +68,100 @@ export function DashboardPage() {
   }
 
   return (
-    <div>
-      <h1 className="page-title">แอปพลิเคชัน</h1>
-      <p className="page-desc">
-        แยกคีย์และ webhook ต่อระบบ — เรียก API สร้างรายการชำระด้วย <code className="inline">POST /v1/payments</code>
-      </p>
+    <div className="space-y-8">
+      <PageHeader
+        title="แอปพลิเคชัน"
+        description={
+          <>
+            แยกคีย์และ webhook ต่อระบบ — เรียก API สร้างรายการชำระด้วย{' '}
+            <Code>POST /v1/payments</Code>
+          </>
+        }
+      />
 
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ margin: '0 0 1rem', fontSize: '1.05rem', fontWeight: 600 }}>สร้างแอปใหม่</h2>
-        <form onSubmit={create}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
-            <div style={{ flex: '1 1 180px' }}>
-              <label className="input-label" htmlFor="app-name">
-                ชื่อแอป
-              </label>
-              <input
+      <Card>
+        <CardTitle className="flex items-center gap-2">
+          <Plus className="size-4 text-blue-600" />
+          สร้างแอปใหม่
+        </CardTitle>
+        <form className="mt-4" onSubmit={create}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+            <FormField id="app-name" label="ชื่อแอป" className="min-w-0 flex-1 sm:min-w-[180px]">
+              <Input
                 id="app-name"
-                className="input"
                 placeholder="เช่น ร้านค้าหลัก"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
               />
-            </div>
-            <div style={{ flex: '1 1 160px' }}>
-              <label className="input-label" htmlFor="app-slug">
-                Slug
-              </label>
-              <input
+            </FormField>
+            <FormField id="app-slug" label="Slug" className="min-w-0 flex-1 sm:min-w-[160px]">
+              <Input
                 id="app-slug"
-                className="input"
                 placeholder="a-z 0-9 และ -"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 required
               />
-            </div>
-            <button type="submit" className="btn btn-primary">
+            </FormField>
+            <Button type="submit" className="w-full gap-2 sm:w-auto">
+              <Plus className="size-4" />
               สร้างแอป
-            </button>
+            </Button>
           </div>
-          {err ? <div className="err">{err}</div> : null}
-          {secretInfo ? <div className="secret-box">{secretInfo}</div> : null}
+          {err ? (
+            <Alert variant="error" className="mt-4">
+              {err}
+            </Alert>
+          ) : null}
+          {secretInfo ? (
+            <Alert variant="success" className="mt-4">
+              {secretInfo}
+            </Alert>
+          ) : null}
         </form>
-      </div>
+      </Card>
 
-      <div className="card">
-        <h2 style={{ margin: '0 0 1rem', fontSize: '1.05rem', fontWeight: 600 }}>รายการแอป</h2>
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>ชื่อ</th>
-                <th>Slug</th>
-                <th>สถานะ</th>
-                <th style={{ width: 100 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((a) => (
-                <tr key={a.id}>
-                  <td style={{ fontWeight: 600 }}>{a.name}</td>
-                  <td>
-                    <code className="inline">{a.slug}</code>
-                  </td>
-                  <td>{statusBadge(a.status)}</td>
-                  <td>
-                    <Link to={`/dashboard/apps/${a.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>
-                      จัดการ
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {items.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0', fontSize: '0.9rem' }}>
-            ยังไม่มีแอป — สร้างแอปแรกด้านบน
-          </p>
-        ) : null}
-      </div>
+      <Card>
+        <CardTitle>รายการแอป</CardTitle>
+        {items.length > 0 ? (
+          <TableWrap className="mt-4">
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>ชื่อ</Th>
+                  <Th>Slug</Th>
+                  <Th>สถานะ</Th>
+                  <Th className="w-28 text-right sm:text-left" />
+                </Tr>
+              </Thead>
+              <Tbody>
+                {items.map((a) => (
+                  <Tr key={a.id}>
+                    <Td className="font-semibold">{a.name}</Td>
+                    <Td>
+                      <Code>{a.slug}</Code>
+                    </Td>
+                    <Td>{statusBadge(a.status)}</Td>
+                    <Td className="text-right sm:text-left">
+                      <LinkButton to={`/dashboard/apps/${a.id}`} variant="secondary" size="sm">
+                        จัดการ
+                      </LinkButton>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </TableWrap>
+        ) : (
+          <div className="mt-6 flex flex-col items-center gap-3 py-8 text-center">
+            <div className="flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+              <Boxes className="size-6" />
+            </div>
+            <p className="text-sm text-slate-500">ยังไม่มีแอป — สร้างแอปแรกด้านบน</p>
+          </div>
+        )}
+      </Card>
     </div>
   )
 }

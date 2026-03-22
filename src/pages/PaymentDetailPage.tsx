@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import QRCode from 'react-qr-code'
-import { api } from '../api/client'
+import { ArrowLeft, Loader2 } from 'lucide-react'
+import { api } from '@/api/client'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
+import { Code } from '@/components/ui/code'
 
 type Detail = {
   id: string
@@ -13,6 +18,16 @@ type Detail = {
   truewallet_phone: string
   truewallet_full_name: string
   expired_at: string | null
+}
+
+function statusBadge(status: string) {
+  if (status === 'completed')
+    return <Badge variant="success">completed</Badge>
+  if (status === 'pending')
+    return <Badge variant="warning">pending</Badge>
+  if (status === 'cancelled')
+    return <Badge>cancelled</Badge>
+  return <Badge>{status}</Badge>
 }
 
 export function PaymentDetailPage() {
@@ -28,87 +43,86 @@ export function PaymentDetailPage() {
       .catch(() => setErr('โหลดไม่ได้'))
   }, [paymentId])
 
-  if (err) return <div className="err">{err}</div>
+  if (err) return <Alert variant="error">{err}</Alert>
   if (!d)
     return (
-      <p style={{ color: 'var(--text-muted)' }}>กำลังโหลด…</p>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-6 animate-spin text-blue-500" />
+      </div>
     )
 
   return (
-    <div>
-      <Link to="/dashboard/payments" className="back-link" style={{ textDecoration: 'none' }}>
-        ← กลับไปรายการธุรกรรม
+    <div className="space-y-6">
+      <Link
+        to="/dashboard/payments"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 no-underline hover:text-blue-700"
+      >
+        <ArrowLeft className="size-3.5" />
+        กลับไปรายการธุรกรรม
       </Link>
-      <h1 className="page-title">รายการชำระเงิน</h1>
-      <p className="page-desc">
-        รหัสอ้างอิง <code className="inline">{d.id}</code>
-      </p>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">รายการชำระเงิน</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          รหัสอ้างอิง <Code>{d.id}</Code>
+        </p>
+      </div>
 
-      <div className="card" style={{ maxWidth: 520 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+      <Card className="max-w-lg">
+        <div className="flex flex-wrap items-center gap-6">
           <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               สถานะ
             </div>
-            <div style={{ marginTop: '0.25rem', fontWeight: 700, fontSize: '1.125rem' }}>{d.status}</div>
+            <div className="mt-1.5">{statusBadge(d.status)}</div>
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               ยอดโอน
             </div>
-            <div style={{ marginTop: '0.25rem', fontWeight: 700, fontSize: '1.125rem' }}>฿{d.amount_with_decimal}</div>
+            <div className="mt-1 text-2xl font-bold tabular-nums text-slate-900">฿{d.amount_with_decimal}</div>
           </div>
         </div>
 
-        <dl style={{ margin: 0, display: 'grid', gap: '0.65rem', fontSize: '0.9rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-            <dt style={{ color: 'var(--text-muted)', margin: 0 }}>ยอดหลัก</dt>
-            <dd style={{ margin: 0, fontWeight: 500 }}>฿{d.amount}</dd>
+        <dl className="mt-6 divide-y divide-slate-100 text-sm">
+          <div className="flex justify-between gap-4 py-3">
+            <dt className="text-slate-500">ยอดหลัก</dt>
+            <dd className="font-medium tabular-nums">฿{d.amount}</dd>
           </div>
           {d.client_reference ? (
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-              <dt style={{ color: 'var(--text-muted)', margin: 0 }}>อ้างอิงฝั่งคุณ</dt>
-              <dd style={{ margin: 0 }}>{d.client_reference}</dd>
+            <div className="flex justify-between gap-4 py-3">
+              <dt className="text-slate-500">อ้างอิงฝั่งคุณ</dt>
+              <dd className="font-mono text-xs">{d.client_reference}</dd>
             </div>
           ) : null}
           {d.expired_at ? (
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-              <dt style={{ color: 'var(--text-muted)', margin: 0 }}>หมดอายุ</dt>
-              <dd style={{ margin: 0 }}>{d.expired_at}</dd>
+            <div className="flex justify-between gap-4 py-3">
+              <dt className="text-slate-500">หมดอายุ</dt>
+              <dd>{d.expired_at}</dd>
             </div>
           ) : null}
           {d.truewallet_full_name ? (
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-              <dt style={{ color: 'var(--text-muted)', margin: 0 }}>ชื่อบัญชีรับเงิน</dt>
-              <dd style={{ margin: 0 }}>{d.truewallet_full_name}</dd>
+            <div className="flex justify-between gap-4 py-3">
+              <dt className="text-slate-500">ชื่อบัญชีรับเงิน</dt>
+              <dd>{d.truewallet_full_name}</dd>
             </div>
           ) : null}
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-            <dt style={{ color: 'var(--text-muted)', margin: 0 }}>เบอร์ TrueWallet</dt>
-            <dd style={{ margin: 0, fontFamily: 'ui-monospace, monospace' }}>{d.truewallet_phone}</dd>
+          <div className="flex justify-between gap-4 py-3">
+            <dt className="text-slate-500">เบอร์ TrueWallet</dt>
+            <dd className="font-mono text-sm">{d.truewallet_phone}</dd>
           </div>
         </dl>
 
         {d.status === 'pending' ? (
-          <div style={{ marginTop: '1.75rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
-            <p style={{ margin: '0 0 0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+          <div className="mt-6 border-t border-slate-200 pt-6">
+            <p className="font-semibold text-slate-800">
               สแกนจ่ายด้วย PromptPay / TrueMoney
             </p>
-            <div
-              style={{
-                display: 'inline-block',
-                padding: '1rem',
-                background: '#fff',
-                borderRadius: 'var(--radius)',
-                border: '1px solid var(--border)',
-                boxShadow: 'var(--shadow)',
-              }}
-            >
+            <div className="mt-4 inline-block rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <QRCode value={d.promptpay_qr} size={216} />
             </div>
           </div>
         ) : null}
-      </div>
+      </Card>
     </div>
   )
 }

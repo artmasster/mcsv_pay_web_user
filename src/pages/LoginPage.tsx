@@ -1,80 +1,192 @@
-import { useState } from 'react'
+import { type FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { api } from '../api/client'
-import { PublicNav } from '../components/PublicNav'
+import { Wallet } from 'lucide-react'
+import { api } from '@/api/client'
+import { RecaptchaField } from '@/components/RecaptchaField'
+import { Alert } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import { FormInput } from '@/components/ui/form-field'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export function LoginPage() {
   const nav = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [err, setErr] = useState('')
+  const [needs2fa, setNeeds2fa] = useState(false)
+  const [twoFaToken, setTwoFaToken] = useState('')
+  const [totpCode, setTotpCode] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaBust, setCaptchaBust] = useState(0)
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault()
     setErr('')
+    setLoading(true)
     try {
-      const { data } = await api.post('/api/merchant/auth/login', { email, password })
+      const { data } = await api.post<{
+        token?: string
+        requires_2fa?: boolean
+        two_fa_token?: string
+      }>('/api/merchant/auth/login', {
+        email,
+        password,
+        recaptcha_token: captchaToken || undefined,
+      })
+      if (data.requires_2fa && data.two_fa_token) {
+        setTwoFaToken(data.two_fa_token)
+        setNeeds2fa(true)
+        return
+      }
+      if (data.token) {
+        localStorage.setItem('pgw_merchant_token', data.token)
+        nav('/dashboard')
+      }
+    } catch (x: unknown) {
+      const ax = x as { response?: { data?: { error?: string } } }
+      setErr(ax.response?.data?.error || 'เข้าสู่ระบบไม่สำเร็จ')
+      setCaptchaBust((n) => n + 1)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function submit2fa(e: FormEvent) {
+    e.preventDefault()
+    setErr('')
+    setLoading(true)
+    try {
+      const { data } = await api.post<{ token: string }>('/api/merchant/auth/2fa/verify', {
+        two_fa_token: twoFaToken,
+        code: totpCode.trim(),
+      })
       localStorage.setItem('pgw_merchant_token', data.token)
       nav('/dashboard')
     } catch (x: unknown) {
       const ax = x as { response?: { data?: { error?: string } } }
-      setErr(ax.response?.data?.error || 'เข้าสู่ระบบไม่สำเร็จ')
+      setErr(ax.response?.data?.error || 'รหัส 2FA ไม่ถูกต้อง')
+    } finally {
+      setLoading(false)
     }
   }
 
-  return (
-    <>
-      <PublicNav />
-      <div className="page-auth">
-        <div className="auth-card">
-          <div className="card card-elevated">
-            <h1 className="page-title" style={{ marginBottom: '0.25rem' }}>
-              เข้าสู่ระบบ
-            </h1>
-            <p className="page-desc" style={{ marginBottom: '1.25rem' }}>
-              จัดการแอป API keys และธุรกรรมของคุณ
-            </p>
-            <form onSubmit={submit}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label className="input-label" htmlFor="login-email">
-                  อีเมล
-                </label>
-                <input
-                  id="login-email"
-                  className="input"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label className="input-label" htmlFor="login-password">
-                  รหัสผ่าน
-                </label>
-                <input
-                  id="login-password"
-                  className="input"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              {err ? <div className="err">{err}</div> : null}
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
-                เข้าสู่ระบบ
-              </button>
-            </form>
-            <p style={{ marginTop: '1.25rem', fontSize: '0.9rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-              ยังไม่มีบัญชี?{' '}
-              <Link to="/register">สมัครใช้งาน</Link>
-            </p>
+  if (needs2fa) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 px-4 py-10">
+        <Card className="w-full max-w-md shadow-lg">
+          <div className="flex flex-col items-center text-center">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+              <Wallet className="size-6" />
+            </div>
+            <CardTitle className="mt-4 text-xl">ยืนยันตัวตน 2FA</CardTitle>
+            <CardDescription className="mt-1">
+              กรอกรหัส 6 หลักจากแอป Authenticator
+            </CardDescription>
           </div>
-        </div>
+          <form className="mt-8 space-y-4" onSubmit={submit2fa}>
+            <div className="space-y-1.5">
+              <Label htmlFor="totp">รหัสยืนยัน</Label>
+              <Input
+                id="totp"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                placeholder="000000"
+                value={totpCode}
+                onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
+              />
+            </div>
+            {err ? <Alert variant="error">{err}</Alert> : null}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || totpCode.length !== 6}
+            >
+              เข้าสู่ระบบ
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={() => {
+                setNeeds2fa(false)
+                setTwoFaToken('')
+                setTotpCode('')
+                setErr('')
+                setCaptchaBust((n) => n + 1)
+              }}
+            >
+              กลับ
+            </Button>
+          </form>
+        </Card>
       </div>
-    </>
+    )
+  }
+
+  return (
+    <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 px-4 py-10">
+      <Card className="w-full max-w-md shadow-lg">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+            <Wallet className="size-6" />
+          </div>
+          <CardTitle className="mt-4 text-xl">เข้าสู่ระบบ</CardTitle>
+          <CardDescription className="mt-1">
+            จัดการแอป API keys และธุรกรรมของคุณ
+          </CardDescription>
+        </div>
+        <form className="mt-8 space-y-4" onSubmit={submit}>
+          <FormInput
+            id="login-email"
+            label="อีเมล"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <FormInput
+            id="login-password"
+            label="รหัสผ่าน"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {err ? (
+            <Alert variant="error">{err}</Alert>
+          ) : null}
+          <RecaptchaField
+            layout="login"
+            theme="light"
+            accent="blue"
+            captchaToken={captchaToken}
+            onTokenChange={setCaptchaToken}
+            captchaBust={captchaBust}
+          />
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading || !captchaToken}
+          >
+            เข้าสู่ระบบ
+          </Button>
+        </form>
+        <p className="mt-6 text-center text-sm text-slate-500">
+          ยังไม่มีบัญชี?{' '}
+          <Link
+            to="/register"
+            className="font-medium text-blue-600 no-underline hover:text-blue-700"
+          >
+            สมัครใช้งาน
+          </Link>
+        </p>
+      </Card>
+    </div>
   )
 }
