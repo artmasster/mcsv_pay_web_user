@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
+import { PublicNav } from '../components/PublicNav'
 
 export function LoginPage() {
   const nav = useNavigate()
@@ -14,7 +15,7 @@ export function LoginPage() {
     try {
       const { data } = await api.post('/api/merchant/auth/login', { email, password })
       localStorage.setItem('pgw_merchant_token', data.token)
-      nav('/')
+      nav('/dashboard')
     } catch (x: unknown) {
       const ax = x as { response?: { data?: { error?: string } } }
       setErr(ax.response?.data?.error || 'เข้าสู่ระบบไม่สำเร็จ')
@@ -22,41 +23,58 @@ export function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: '3rem auto', padding: '0 1rem' }}>
-      <h1 style={{ marginBottom: '1.5rem' }}>เข้าสู่ระบบ</h1>
-      <form className="card" onSubmit={submit}>
-        <div style={{ marginBottom: '0.75rem' }}>
-          <label>
-            อีเมล
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{ display: 'block', width: '100%', marginTop: 4, padding: 8, borderRadius: 6 }}
-            />
-          </label>
+    <>
+      <PublicNav />
+      <div className="page-auth">
+        <div className="auth-card">
+          <div className="card card-elevated">
+            <h1 className="page-title" style={{ marginBottom: '0.25rem' }}>
+              เข้าสู่ระบบ
+            </h1>
+            <p className="page-desc" style={{ marginBottom: '1.25rem' }}>
+              จัดการแอป API keys และธุรกรรมของคุณ
+            </p>
+            <form onSubmit={submit}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label className="input-label" htmlFor="login-email">
+                  อีเมล
+                </label>
+                <input
+                  id="login-email"
+                  className="input"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label className="input-label" htmlFor="login-password">
+                  รหัสผ่าน
+                </label>
+                <input
+                  id="login-password"
+                  className="input"
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              {err ? <div className="err">{err}</div> : null}
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
+                เข้าสู่ระบบ
+              </button>
+            </form>
+            <p style={{ marginTop: '1.25rem', fontSize: '0.9rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+              ยังไม่มีบัญชี?{' '}
+              <Link to="/register">สมัครใช้งาน</Link>
+            </p>
+          </div>
         </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label>
-            รหัสผ่าน
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ display: 'block', width: '100%', marginTop: 4, padding: 8, borderRadius: 6 }}
-            />
-          </label>
-        </div>
-        {err ? <div className="err">{err}</div> : null}
-        <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: 12 }}>
-          เข้าสู่ระบบ
-        </button>
-        <p style={{ marginTop: 16, color: '#94a3b8' }}>
-          ยังไม่มีบัญชี? <Link to="/register">สมัคร</Link>
-        </p>
-      </form>
-    </div>
+      </div>
+    </>
   )
 }

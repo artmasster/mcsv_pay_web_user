@@ -9,6 +9,12 @@ type AppRow = {
   status: string
 }
 
+function statusBadge(status: string) {
+  if (status === 'active') return <span className="badge badge-success">active</span>
+  if (status === 'suspended') return <span className="badge badge-danger">suspended</span>
+  return <span className="badge badge-muted">{status}</span>
+}
+
 export function DashboardPage() {
   const [items, setItems] = useState<AppRow[]>([])
   const [name, setName] = useState('')
@@ -37,8 +43,8 @@ export function DashboardPage() {
       const wh = data.webhook_secret
       setSecretInfo(
         wh
-          ? `สร้างแอปแล้ว เก็บ webhook_secret สำหรับตรวจลายเซ็น: ${wh}`
-          : 'สร้างแอปแล้ว',
+          ? `สร้างแอปสำเร็จ — เก็บ webhook_secret นี้ไว้ตรวจลายเซ็นจากเซิร์ฟเวอร์ของคุณ: ${wh}`
+          : 'สร้างแอปสำเร็จ',
       )
       setName('')
       setSlug('')
@@ -51,75 +57,85 @@ export function DashboardPage() {
 
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>แอปพลิเคชัน</h1>
-      <p style={{ color: '#94a3b8' }}>
-        แต่ละแอปมี API key แยก ใช้เรียกสร้างรายการชำระผ่าน Merchant API
+      <h1 className="page-title">แอปพลิเคชัน</h1>
+      <p className="page-desc">
+        แยกคีย์และ webhook ต่อระบบ — เรียก API สร้างรายการชำระด้วย <code className="inline">POST /v1/payments</code>
       </p>
 
-      <form className="card" onSubmit={create} style={{ marginBottom: '1.5rem' }}>
-        <h3 style={{ marginTop: 0 }}>สร้างแอปใหม่</h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          <input
-            placeholder="ชื่อ"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            style={{ flex: 1, minWidth: 140, padding: 8, borderRadius: 6 }}
-          />
-          <input
-            placeholder="slug (a-z0-9-)"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            required
-            style={{ flex: 1, minWidth: 140, padding: 8, borderRadius: 6 }}
-          />
-          <button type="submit" className="btn btn-primary">
-            สร้าง
-          </button>
-        </div>
-        {err ? <div className="err">{err}</div> : null}
-        {secretInfo ? (
-          <pre
-            style={{
-              marginTop: 12,
-              padding: 12,
-              background: '#0f172a',
-              borderRadius: 8,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-all',
-            }}
-          >
-            {secretInfo}
-          </pre>
-        ) : null}
-      </form>
+      <div className="card" style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ margin: '0 0 1rem', fontSize: '1.05rem', fontWeight: 600 }}>สร้างแอปใหม่</h2>
+        <form onSubmit={create}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+            <div style={{ flex: '1 1 180px' }}>
+              <label className="input-label" htmlFor="app-name">
+                ชื่อแอป
+              </label>
+              <input
+                id="app-name"
+                className="input"
+                placeholder="เช่น ร้านค้าหลัก"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div style={{ flex: '1 1 160px' }}>
+              <label className="input-label" htmlFor="app-slug">
+                Slug
+              </label>
+              <input
+                id="app-slug"
+                className="input"
+                placeholder="a-z 0-9 และ -"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                required
+              />
+            </div>
+            <button type="submit" className="btn btn-primary">
+              สร้างแอป
+            </button>
+          </div>
+          {err ? <div className="err">{err}</div> : null}
+          {secretInfo ? <div className="secret-box">{secretInfo}</div> : null}
+        </form>
+      </div>
 
       <div className="card">
-        <table>
-          <thead>
-            <tr>
-              <th>ชื่อ</th>
-              <th>slug</th>
-              <th>สถานะ</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((a) => (
-              <tr key={a.id}>
-                <td>{a.name}</td>
-                <td>
-                  <code>{a.slug}</code>
-                </td>
-                <td>{a.status}</td>
-                <td>
-                  <Link to={`/apps/${a.id}`}>จัดการ</Link>
-                </td>
+        <h2 style={{ margin: '0 0 1rem', fontSize: '1.05rem', fontWeight: 600 }}>รายการแอป</h2>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ชื่อ</th>
+                <th>Slug</th>
+                <th>สถานะ</th>
+                <th style={{ width: 100 }}></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {items.length === 0 ? <p style={{ color: '#64748b' }}>ยังไม่มีแอป</p> : null}
+            </thead>
+            <tbody>
+              {items.map((a) => (
+                <tr key={a.id}>
+                  <td style={{ fontWeight: 600 }}>{a.name}</td>
+                  <td>
+                    <code className="inline">{a.slug}</code>
+                  </td>
+                  <td>{statusBadge(a.status)}</td>
+                  <td>
+                    <Link to={`/dashboard/apps/${a.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>
+                      จัดการ
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {items.length === 0 ? (
+          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0', fontSize: '0.9rem' }}>
+            ยังไม่มีแอป — สร้างแอปแรกด้านบน
+          </p>
+        ) : null}
       </div>
     </div>
   )

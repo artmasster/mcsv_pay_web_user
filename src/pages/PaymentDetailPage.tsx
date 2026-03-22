@@ -29,29 +29,82 @@ export function PaymentDetailPage() {
   }, [paymentId])
 
   if (err) return <div className="err">{err}</div>
-  if (!d) return <p>กำลังโหลด…</p>
+  if (!d)
+    return (
+      <p style={{ color: 'var(--text-muted)' }}>กำลังโหลด…</p>
+    )
 
   return (
     <div>
-      <p>
-        <Link to="/payments">← กลับ</Link>
+      <Link to="/dashboard/payments" className="back-link" style={{ textDecoration: 'none' }}>
+        ← กลับไปรายการธุรกรรม
+      </Link>
+      <h1 className="page-title">รายการชำระเงิน</h1>
+      <p className="page-desc">
+        รหัสอ้างอิง <code className="inline">{d.id}</code>
       </p>
-      <h1 style={{ marginTop: 0 }}>รายการ {d.id.slice(0, 8)}</h1>
-      <div className="card">
-        <p>
-          สถานะ: <strong>{d.status}</strong>
-        </p>
-        <p>ยอดหลัก: {d.amount} บาท</p>
-        <p>ยอดโอน (รวมทศนิยมอ้างอิง): {d.amount_with_decimal}</p>
-        {d.client_reference ? <p>อ้างอิง: {d.client_reference}</p> : null}
-        {d.expired_at ? <p>หมดอายุ: {d.expired_at}</p> : null}
-        {d.truewallet_full_name ? <p>ชื่อบัญชี: {d.truewallet_full_name}</p> : null}
-        <p>เบอร์ TrueWallet: {d.truewallet_phone}</p>
+
+      <div className="card" style={{ maxWidth: 520 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+          <div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              สถานะ
+            </div>
+            <div style={{ marginTop: '0.25rem', fontWeight: 700, fontSize: '1.125rem' }}>{d.status}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              ยอดโอน
+            </div>
+            <div style={{ marginTop: '0.25rem', fontWeight: 700, fontSize: '1.125rem' }}>฿{d.amount_with_decimal}</div>
+          </div>
+        </div>
+
+        <dl style={{ margin: 0, display: 'grid', gap: '0.65rem', fontSize: '0.9rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+            <dt style={{ color: 'var(--text-muted)', margin: 0 }}>ยอดหลัก</dt>
+            <dd style={{ margin: 0, fontWeight: 500 }}>฿{d.amount}</dd>
+          </div>
+          {d.client_reference ? (
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+              <dt style={{ color: 'var(--text-muted)', margin: 0 }}>อ้างอิงฝั่งคุณ</dt>
+              <dd style={{ margin: 0 }}>{d.client_reference}</dd>
+            </div>
+          ) : null}
+          {d.expired_at ? (
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+              <dt style={{ color: 'var(--text-muted)', margin: 0 }}>หมดอายุ</dt>
+              <dd style={{ margin: 0 }}>{d.expired_at}</dd>
+            </div>
+          ) : null}
+          {d.truewallet_full_name ? (
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+              <dt style={{ color: 'var(--text-muted)', margin: 0 }}>ชื่อบัญชีรับเงิน</dt>
+              <dd style={{ margin: 0 }}>{d.truewallet_full_name}</dd>
+            </div>
+          ) : null}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+            <dt style={{ color: 'var(--text-muted)', margin: 0 }}>เบอร์ TrueWallet</dt>
+            <dd style={{ margin: 0, fontFamily: 'ui-monospace, monospace' }}>{d.truewallet_phone}</dd>
+          </div>
+        </dl>
+
         {d.status === 'pending' ? (
-          <div style={{ marginTop: 16 }}>
-            <p style={{ color: '#94a3b8' }}>สแกน PromptPay / TrueMoney</p>
-            <div style={{ background: '#fff', padding: 16, display: 'inline-block', borderRadius: 12 }}>
-              <QRCode value={d.promptpay_qr} size={220} />
+          <div style={{ marginTop: '1.75rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
+            <p style={{ margin: '0 0 0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+              สแกนจ่ายด้วย PromptPay / TrueMoney
+            </p>
+            <div
+              style={{
+                display: 'inline-block',
+                padding: '1rem',
+                background: '#fff',
+                borderRadius: 'var(--radius)',
+                border: '1px solid var(--border)',
+                boxShadow: 'var(--shadow)',
+              }}
+            >
+              <QRCode value={d.promptpay_qr} size={216} />
             </div>
           </div>
         ) : null}

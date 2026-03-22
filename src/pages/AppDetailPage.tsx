@@ -43,11 +43,8 @@ export function AppDetailPage() {
     try {
       await api.patch(`/api/merchant/applications/${id}`, { webhook_url: webhookUrl || null })
     } catch (x: unknown) {
-      const m =
-        typeof x === 'object' && x !== null && 'response' in x
-          ? (x as { response?: { data?: { error?: string } } }).response?.data?.error
-          : null
-      setErr(m || 'บันทึกไม่สำเร็จ')
+      const ax = x as { response?: { data?: { error?: string } } }
+      setErr(ax.response?.data?.error || 'บันทึกไม่สำเร็จ')
     }
   }
 
@@ -63,11 +60,8 @@ export function AppDetailPage() {
       setKeyName('')
       await loadKeys()
     } catch (x: unknown) {
-      const m =
-        typeof x === 'object' && x !== null && 'response' in x
-          ? (x as { response?: { data?: { error?: string } } }).response?.data?.error
-          : null
-      setErr(m || 'สร้างคีย์ไม่สำเร็จ')
+      const ax = x as { response?: { data?: { error?: string } } }
+      setErr(ax.response?.data?.error || 'สร้างคีย์ไม่สำเร็จ')
     }
   }
 
@@ -78,128 +72,121 @@ export function AppDetailPage() {
       const { data } = await api.post(`/api/merchant/applications/${id}/rotate-webhook-secret`)
       setWhSecret(data.webhook_secret as string)
     } catch (x: unknown) {
-      const m =
-        typeof x === 'object' && x !== null && 'response' in x
-          ? (x as { response?: { data?: { error?: string } } }).response?.data?.error
-          : null
-      setErr(m || 'หมุน secret ไม่สำเร็จ')
+      const ax = x as { response?: { data?: { error?: string } } }
+      setErr(ax.response?.data?.error || 'หมุน secret ไม่สำเร็จ')
     }
   }
 
   async function revokeKey(keyId: string) {
-    if (!confirm('ยกเลิกคีย์นี้?')) return
+    if (!confirm('ยกเลิกคีย์นี้? ระบบที่ใช้คีย์นี้จะเรียก API ไม่ได้')) return
     setErr('')
     try {
       await api.delete(`/api/merchant/api-keys/${keyId}`)
       await loadKeys()
     } catch (x: unknown) {
-      const m =
-        typeof x === 'object' && x !== null && 'response' in x
-          ? (x as { response?: { data?: { error?: string } } }).response?.data?.error
-          : null
-      setErr(m || 'ยกเลิกไม่สำเร็จ')
+      const ax = x as { response?: { data?: { error?: string } } }
+      setErr(ax.response?.data?.error || 'ยกเลิกไม่สำเร็จ')
     }
   }
 
   return (
     <div>
-      <p>
-        <Link to="/">← กลับ</Link>
+      <Link to="/dashboard" className="back-link" style={{ textDecoration: 'none' }}>
+        ← กลับไปแอปทั้งหมด
+      </Link>
+      <h1 className="page-title">จัดการแอป</h1>
+      <p className="page-desc">
+        รหัสแอป <code className="inline">{id?.slice(0, 8)}…</code>
       </p>
-      <h1 style={{ marginTop: 0 }}>แอป #{id?.slice(0, 8)}</h1>
 
-      <div className="card" style={{ marginBottom: '1rem' }}>
-        <h3 style={{ marginTop: 0 }}>Webhook URL</h3>
-        <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
-          PGW จะ POST JSON พร้อมหัว <code>X-PGW-Signature</code> (HMAC-SHA256 ของ timestamp.body)
+      <div className="card" style={{ marginBottom: '1.25rem' }}>
+        <h2 style={{ margin: '0 0 0.75rem', fontSize: '1.05rem', fontWeight: 600 }}>Webhook URL</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: '0 0 1rem', lineHeight: 1.55 }}>
+          ระบบจะส่ง <code className="inline">POST</code> JSON พร้อมหัว <code className="inline">X-PGW-Signature</code>{' '}
+          (HMAC-SHA256 ของ <code className="inline">timestamp.body</code>)
         </p>
         <input
+          className="input"
           value={webhookUrl}
           onChange={(e) => setWebhookUrl(e.target.value)}
-          placeholder="https://your-backend.example/pgw-webhook"
-          style={{ width: '100%', padding: 8, borderRadius: 6, marginBottom: 8 }}
+          placeholder="https://api.example.com/webhooks/pgw"
+          style={{ marginBottom: '0.75rem' }}
         />
-        <button type="button" className="btn btn-primary" onClick={saveWebhook}>
-          บันทึก URL
-        </button>
-        <button type="button" className="btn btn-ghost" style={{ marginLeft: 8 }} onClick={rotateWh}>
-          หมุน webhook secret
-        </button>
-        {whSecret && (
-          <pre
-            style={{
-              marginTop: 12,
-              padding: 12,
-              background: '#0f172a',
-              borderRadius: 8,
-              wordBreak: 'break-all',
-            }}
-          >
-            webhook_secret ใหม่: {whSecret}
-          </pre>
-        )}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <button type="button" className="btn btn-primary" onClick={saveWebhook}>
+            บันทึก URL
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={rotateWh}>
+            หมุน webhook secret
+          </button>
+        </div>
+        {whSecret ? (
+          <div className="secret-box" style={{ marginTop: '0.75rem' }}>
+            <strong style={{ color: 'var(--text)' }}>webhook_secret ใหม่:</strong> {whSecret}
+          </div>
+        ) : null}
       </div>
 
-      <div className="card" style={{ marginBottom: '1rem' }}>
-        <h3 style={{ marginTop: 0 }}>API keys</h3>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+      <div className="card">
+        <h2 style={{ margin: '0 0 0.75rem', fontSize: '1.05rem', fontWeight: 600 }}>API keys</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: '0 0 1rem' }}>
+          ใช้ใน header <code className="inline">Authorization: Bearer pgw_sk_…</code> — แสดงค่าเต็มครั้งเดียวตอนสร้าง
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
           <input
+            className="input"
+            style={{ flex: '1 1 200px', margin: 0 }}
             placeholder="ชื่อคีย์ (ไม่บังคับ)"
             value={keyName}
             onChange={(e) => setKeyName(e.target.value)}
-            style={{ flex: 1, minWidth: 160, padding: 8, borderRadius: 6 }}
           />
           <button type="button" className="btn btn-primary" onClick={createKey}>
-            สร้างคีย์
+            สร้างคีย์ใหม่
           </button>
         </div>
-        {newKey && (
-          <pre
-            style={{
-              padding: 12,
-              background: '#14532d',
-              borderRadius: 8,
-              wordBreak: 'break-all',
-            }}
-          >
-            API key (ครั้งเดียว): {newKey}
-          </pre>
-        )}
-        <table>
-          <thead>
-            <tr>
-              <th>prefix</th>
-              <th>ชื่อ</th>
-              <th>สร้าง</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {keys.map((k) => (
-              <tr key={k.id}>
-                <td>
-                  <code>{k.key_prefix}…</code>
-                </td>
-                <td>{k.name || '—'}</td>
-                <td>{k.created_at || '—'}</td>
-                <td>
-                  {!k.revoked_at ? (
-                    <button type="button" className="btn btn-ghost" onClick={() => revokeKey(k.id)}>
-                      ยกเลิก
-                    </button>
-                  ) : (
-                    <span style={{ color: '#64748b' }}>ยกเลิกแล้ว</span>
-                  )}
-                </td>
+        {newKey ? (
+          <div className="success-banner" style={{ marginBottom: '1rem' }}>
+            <strong>คัดลอกเก็บไว้ทันที</strong> — จะไม่แสดงอีก: <span style={{ wordBreak: 'break-all' }}>{newKey}</span>
+          </div>
+        ) : null}
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Prefix</th>
+                <th>ชื่อ</th>
+                <th>สร้างเมื่อ</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {keys.map((k) => (
+                <tr key={k.id}>
+                  <td>
+                    <code className="inline">{k.key_prefix}…</code>
+                  </td>
+                  <td>{k.name || '—'}</td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{k.created_at || '—'}</td>
+                  <td>
+                    {!k.revoked_at ? (
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => revokeKey(k.id)}>
+                        ยกเลิก
+                      </button>
+                    ) : (
+                      <span className="badge badge-muted">ยกเลิกแล้ว</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {err && <div className="err">{err}</div>}
-      <p>
-        <Link to="/payments">ดูธุรกรรมทั้งหมด →</Link>
+      {err ? <div className="err" style={{ marginTop: '1rem' }}>{err}</div> : null}
+
+      <p style={{ marginTop: '1.5rem' }}>
+        <Link to="/dashboard/payments">ดูธุรกรรมทั้งหมด →</Link>
       </p>
     </div>
   )
