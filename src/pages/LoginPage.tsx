@@ -1,8 +1,9 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Wallet } from 'lucide-react'
+import { PayLogoMark } from '@/components/PayLogoMark'
 import { api } from '@/api/client'
-import { RecaptchaField } from '@/components/RecaptchaField'
+import { RECAPTCHA_SITE_KEY } from '@/lib/recaptchaSiteKey'
+import { loadRecaptcha } from '@/utils/loadRecaptcha'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
@@ -20,7 +21,24 @@ export function LoginPage() {
   const [totpCode, setTotpCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const [captchaBust, setCaptchaBust] = useState(0)
+  const captchaRef = useRef<HTMLDivElement>(null)
+  const widgetIdRef = useRef<number | null>(null)
+
+  const renderCaptcha = useCallback(() => {
+    if (!captchaRef.current || widgetIdRef.current !== null) return
+    const w = window as { grecaptcha?: { render: (el: HTMLElement, opts: object) => number } }
+    if (!w.grecaptcha?.render) return
+    widgetIdRef.current = w.grecaptcha.render(captchaRef.current, {
+      sitekey: RECAPTCHA_SITE_KEY,
+      theme: 'dark',
+      callback: (token: string) => setCaptchaToken(token),
+      'expired-callback': () => setCaptchaToken(null),
+    })
+  }, [])
+
+  useEffect(() => {
+    loadRecaptcha().then(() => renderCaptcha())
+  }, [renderCaptcha])
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -42,13 +60,17 @@ export function LoginPage() {
         return
       }
       if (data.token) {
-        localStorage.setItem('pgw_merchant_token', data.token)
+        localStorage.setItem('pay_merchant_token', data.token)
         nav('/dashboard')
       }
     } catch (x: unknown) {
       const ax = x as { response?: { data?: { error?: string } } }
       setErr(ax.response?.data?.error || 'เข้าสู่ระบบไม่สำเร็จ')
-      setCaptchaBust((n) => n + 1)
+      const w = window as { grecaptcha?: { reset: (id: number) => void } }
+      if (w.grecaptcha && widgetIdRef.current !== null) {
+        w.grecaptcha.reset(widgetIdRef.current)
+        setCaptchaToken(null)
+      }
     } finally {
       setLoading(false)
     }
@@ -63,7 +85,7 @@ export function LoginPage() {
         two_fa_token: twoFaToken,
         code: totpCode.trim(),
       })
-      localStorage.setItem('pgw_merchant_token', data.token)
+      localStorage.setItem('pay_merchant_token', data.token)
       nav('/dashboard')
     } catch (x: unknown) {
       const ax = x as { response?: { data?: { error?: string } } }
@@ -78,9 +100,7 @@ export function LoginPage() {
       <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 px-4 py-10">
         <Card className="w-full max-w-md shadow-lg">
           <div className="flex flex-col items-center text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
-              <Wallet className="size-6" />
-            </div>
+            <PayLogoMark className="size-12 shadow-sm" />
             <CardTitle className="mt-4 text-xl">ยืนยันตัวตน 2FA</CardTitle>
             <CardDescription className="mt-1">
               กรอกรหัส 6 หลักจากแอป Authenticator
@@ -116,7 +136,11 @@ export function LoginPage() {
                 setTwoFaToken('')
                 setTotpCode('')
                 setErr('')
-                setCaptchaBust((n) => n + 1)
+                const w = window as { grecaptcha?: { reset: (id: number) => void } }
+                if (w.grecaptcha && widgetIdRef.current !== null) {
+                  w.grecaptcha.reset(widgetIdRef.current)
+                  setCaptchaToken(null)
+                }
               }}
             >
               กลับ
@@ -131,9 +155,7 @@ export function LoginPage() {
     <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 px-4 py-10">
       <Card className="w-full max-w-md shadow-lg">
         <div className="flex flex-col items-center text-center">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
-            <Wallet className="size-6" />
-          </div>
+          <PayLogoMark className="size-12 shadow-sm" />
           <CardTitle className="mt-4 text-xl">เข้าสู่ระบบ</CardTitle>
           <CardDescription className="mt-1">
             จัดการแอป API keys และธุรกรรมของคุณ
@@ -161,14 +183,27 @@ export function LoginPage() {
           {err ? (
             <Alert variant="error">{err}</Alert>
           ) : null}
-          <RecaptchaField
-            layout="login"
-            theme="light"
-            accent="blue"
-            captchaToken={captchaToken}
-            onTokenChange={setCaptchaToken}
-            captchaBust={captchaBust}
-          />
+          <div className="flex justify-center">
+            <div
+              className="rounded-xl p-[2px] transition-all duration-700"
+              style={{
+                background: captchaToken
+                  ? 'linear-gradient(135deg, #10b981, #06b6d4, #10b981)'
+                  : 'linear-gradient(135deg, #f59e0b, #ef4444, #f59e0b)',
+                boxShadow: captchaToken
+                  ? '0 0 20px rgba(16,185,129,0.15), 0 0 40px rgba(6,182,212,0.08)'
+                  : '0 0 20px rgba(245,158,11,0.12), 0 0 40px rgba(239,68,68,0.06)',
+              }}
+            >
+              <div className="min-h-[63px] min-w-[275px] overflow-hidden rounded-[10px] bg-[#1e2030]">
+                <div
+                  ref={captchaRef}
+                  className="-mx-4 -my-2 flex justify-center [&>div]:!rounded-lg"
+                  style={{ transform: 'scale(0.92)', transformOrigin: 'center' }}
+                />
+              </div>
+            </div>
+          </div>
           <Button
             type="submit"
             className="w-full"

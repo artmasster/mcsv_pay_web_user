@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Wallet } from 'lucide-react'
+import { PayLogoMark } from '@/components/PayLogoMark'
 import { api } from '@/api/client'
-import { RecaptchaField } from '@/components/RecaptchaField'
+import { RECAPTCHA_SITE_KEY } from '@/lib/recaptchaSiteKey'
+import { loadRecaptcha } from '@/utils/loadRecaptcha'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
@@ -32,7 +33,7 @@ export function RegisterPage() {
         display_name: displayName || undefined,
         recaptcha_token: captchaToken,
       })
-      localStorage.setItem('pgw_merchant_token', data.token)
+      localStorage.setItem('pay_merchant_token', data.token)
       nav('/dashboard')
     } catch (x: unknown) {
       const ax = x as { response?: { data?: { error?: string } } }
@@ -45,9 +46,7 @@ export function RegisterPage() {
     <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 px-4 py-10">
       <Card className="w-full max-w-md shadow-lg">
         <div className="flex flex-col items-center text-center">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
-            <Wallet className="size-6" />
-          </div>
+          <PayLogoMark className="size-12 shadow-sm" />
           <CardTitle className="mt-4 text-xl">สร้างบัญชี merchant</CardTitle>
           <CardDescription className="mt-1">
             ใช้งานฟรีสำหรับเริ่มต้น — สร้างแอปและ API key ได้ทันทีหลังสมัคร
@@ -88,8 +87,6 @@ export function RegisterPage() {
           ) : null}
           <RecaptchaField
             layout="register"
-            theme="light"
-            accent="blue"
             captchaToken={captchaToken}
             onTokenChange={setCaptchaToken}
             captchaBust={captchaBust}

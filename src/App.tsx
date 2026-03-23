@@ -10,7 +10,7 @@ import { PaymentDetailPage } from './pages/PaymentDetailPage'
 import { SecurityPage } from './pages/SecurityPage'
 
 function Private({ children }: { children: React.ReactNode }) {
-  const t = localStorage.getItem('pgw_merchant_token')
+  const t = localStorage.getItem('pay_merchant_token')
   if (!t) return <Navigate to="/login" replace />
   return <>{children}</>
 }

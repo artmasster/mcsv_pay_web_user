@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Wallet } from 'lucide-react'
+import { PayLogoMark } from '@/components/PayLogoMark'
 import { cn } from '@/lib/cn'
 import { LinkButton } from '@/components/ui/link-button'
 
@@ -13,7 +13,7 @@ function navLinkClass() {
 export function PublicNav() {
   const logged =
     typeof localStorage !== 'undefined' &&
-    !!localStorage.getItem('pgw_merchant_token')
+    !!localStorage.getItem('pay_merchant_token')
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 backdrop-blur-lg">
@@ -22,11 +22,12 @@ export function PublicNav() {
           to="/"
           className="flex items-center gap-2.5 no-underline"
         >
-          <div className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-            <Wallet className="size-[18px]" />
-          </div>
+          <PayLogoMark className="size-8" />
           <span className="text-base font-bold tracking-tight text-slate-900">
-            MCSV<span className="text-blue-600"> Pay</span>
+            MCSV{' '}
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-600 bg-clip-text text-transparent">
+              Pay
+            </span>
           </span>
         </Link>
         <nav className="flex flex-wrap items-center gap-1 sm:gap-2">

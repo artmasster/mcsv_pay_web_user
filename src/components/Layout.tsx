@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutGrid, LogOut, Receipt, Shield, Wallet } from 'lucide-react'
+import { LayoutGrid, LogOut, Receipt, Shield } from 'lucide-react'
+import { PayLogoMark } from '@/components/PayLogoMark'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/button'
 
@@ -16,7 +17,7 @@ function navClass({ isActive }: { isActive: boolean }) {
 export function Layout() {
   const nav = useNavigate()
   function logout() {
-    localStorage.removeItem('pgw_merchant_token')
+    localStorage.removeItem('pay_merchant_token')
     nav('/login')
   }
 
@@ -28,11 +29,12 @@ export function Layout() {
             to="/dashboard"
             className="flex items-center gap-2.5 no-underline"
           >
-            <div className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-              <Wallet className="size-4" />
-            </div>
+            <PayLogoMark className="size-8" />
             <span className="text-base font-bold tracking-tight text-slate-900">
-              MCSV<span className="text-blue-600"> Pay</span>
+              MCSV{' '}
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-600 bg-clip-text text-transparent">
+                Pay
+              </span>
             </span>
           </Link>
 

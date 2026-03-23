@@ -14,13 +14,14 @@ import {
   Webhook,
   Zap,
 } from 'lucide-react'
-import { publicApiOrigin } from '@/config/pgw'
+import { PayLogoMark } from '@/components/PayLogoMark'
+import { publicApiOrigin } from '@/config/pay'
 import { PublicNav } from '@/components/PublicNav'
 import { Code } from '@/components/ui/code'
 import { LinkButton } from '@/components/ui/link-button'
 
 export function LandingPage() {
-  const logged = !!localStorage.getItem('pgw_merchant_token')
+  const logged = !!localStorage.getItem('pay_merchant_token')
 
   return (
     <div className="min-h-dvh bg-white">
@@ -117,7 +118,7 @@ export function LandingPage() {
             title="Webhook ที่ตรวจสอบได้"
             description={
               <>
-                รับแจ้งเตือนแบบ real-time พร้อมหัว <Code>X-PGW-Signature</Code> สำหรับยืนยัน
+                รับแจ้งเตือนแบบ real-time พร้อมหัว <Code>X-PAY-Signature</Code> สำหรับยืนยัน
                 HMAC — ลดความเสี่ยงคำสั่งปลอม
               </>
             }
@@ -302,7 +303,7 @@ export function LandingPage() {
                     <span className="text-slate-300">{` -X POST ${publicApiOrigin()}/v1/payments \\`}</span>
                     {'\n'}
                     <span className="text-slate-300">{'  -H '}</span>
-                    <span className="text-amber-300">{'"Authorization: Bearer pgw_sk_..."'}</span>
+                    <span className="text-amber-300">{'"Authorization: Bearer pay_sk_..."'}</span>
                     <span className="text-slate-300">{' \\'}</span>
                     {'\n'}
                     <span className="text-slate-300">{'  -H '}</span>
@@ -420,11 +421,12 @@ export function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="flex items-center gap-2.5">
-              <div className="flex size-7 items-center justify-center rounded-lg bg-blue-600 text-white">
-                <Wallet className="size-4" />
-              </div>
+              <PayLogoMark className="size-7" />
               <span className="text-sm font-bold tracking-tight text-slate-900">
-                MCSV<span className="text-blue-600"> Pay</span>
+                MCSV{' '}
+                <span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-600 bg-clip-text text-transparent">
+                  Pay
+                </span>
               </span>
             </div>
             <p className="text-sm text-slate-500">

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { apiBaseUrl } from '@/config/pgw'
+import { apiBaseUrl } from '@/config/pay'
 
 export const api = axios.create({
   baseURL: apiBaseUrl(),
@@ -23,7 +23,7 @@ api.interceptors.request.use((config) => {
   ) {
     return config
   }
-  const t = localStorage.getItem('pgw_merchant_token')
+  const t = localStorage.getItem('pay_merchant_token')
   if (t) config.headers.Authorization = `Bearer ${t}`
   return config
 })

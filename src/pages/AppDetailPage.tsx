@@ -139,14 +139,14 @@ export function AppDetailPage() {
               Webhook URL
             </CardTitle>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              ระบบจะส่ง <Code>POST</Code> JSON พร้อมหัว <Code>X-PGW-Signature</Code>{' '}
+              ระบบจะส่ง <Code>POST</Code> JSON พร้อมหัว <Code>X-PAY-Signature</Code>{' '}
               (HMAC-SHA256 ของ <Code>timestamp.body</Code>)
             </p>
             <Input
               className="mt-4"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
-              placeholder="https://api.example.com/webhooks/pgw"
+              placeholder="https://api.example.com/webhooks/mcsv-pay"
             />
             <div className="mt-3 flex flex-wrap gap-2">
               <Button type="button" onClick={saveWebhook}>
@@ -172,7 +172,7 @@ export function AppDetailPage() {
               API keys
             </CardTitle>
             <p className="mt-2 text-sm text-slate-600">
-              ใช้ใน header <Code>Authorization: Bearer pgw_sk_…</Code> — แสดงค่าเต็มครั้งเดียวตอนสร้าง
+              ใช้ใน header <Code>Authorization: Bearer pay_sk_…</Code> — แสดงค่าเต็มครั้งเดียวตอนสร้าง
             </p>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Input

@@ -20,8 +20,6 @@ type GrecaptchaWindow = Window & {
 
 type Props = {
   layout: 'login' | 'register'
-  theme?: 'light' | 'dark'
-  accent?: 'blue' | 'orange'
   captchaToken: string | null
   onTokenChange: (token: string | null) => void
   /** เพิ่มทุกครั้งที่ submit ล้มเหลว เพื่อ reset widget */
@@ -30,8 +28,6 @@ type Props = {
 
 export function RecaptchaField({
   layout,
-  theme = 'light',
-  accent = 'blue',
   captchaToken,
   onTokenChange,
   captchaBust = 0,
@@ -56,12 +52,14 @@ export function RecaptchaField({
 
     widgetIdRef.current = w.grecaptcha.render(captchaRef.current, {
       sitekey: RECAPTCHA_SITE_KEY,
-      theme,
+      theme: 'dark',
       callback: (token: string) => onTokenRef.current(token),
       'expired-callback': () => onTokenRef.current(null),
-      'error-callback': () => onTokenRef.current(null),
+      ...(layout === 'register'
+        ? { 'error-callback': () => onTokenRef.current(null) }
+        : {}),
     })
-  }, [layout, theme])
+  }, [layout])
 
   useEffect(() => {
     loadRecaptcha().then(() => renderCaptcha())
@@ -76,40 +74,37 @@ export function RecaptchaField({
     }
   }, [captchaBust])
 
-  const ring =
-    accent === 'orange'
-      ? {
-          on: 'linear-gradient(135deg, #ea580c, #f97316, #ea580c)',
-          off: 'linear-gradient(135deg, #f59e0b, #ef4444, #f59e0b)',
-          shadowOn: '0 0 20px rgba(234,88,12,0.15)',
-          shadowOff: '0 0 20px rgba(245,158,11,0.12)',
-        }
-      : {
-          on: 'linear-gradient(135deg, #2563eb, #3b82f6, #2563eb)',
-          off: 'linear-gradient(135deg, #f59e0b, #ef4444, #f59e0b)',
-          shadowOn: '0 0 20px rgba(37,99,235,0.15)',
-          shadowOff: '0 0 20px rgba(245,158,11,0.12)',
-        }
-
   return (
-    <div className="flex justify-center">
+    <div
+      className={
+        layout === 'register' ? 'flex justify-center my-6' : 'flex justify-center'
+      }
+    >
       <div
         className="rounded-xl p-[2px] transition-all duration-700"
         style={{
-          background: captchaToken ? ring.on : ring.off,
-          boxShadow: captchaToken ? ring.shadowOn : ring.shadowOff,
+          background: captchaToken
+            ? 'linear-gradient(135deg, #10b981, #06b6d4, #10b981)'
+            : 'linear-gradient(135deg, #f59e0b, #ef4444, #f59e0b)',
+          boxShadow: captchaToken
+            ? '0 0 20px rgba(16,185,129,0.15), 0 0 40px rgba(6,182,212,0.08)'
+            : '0 0 20px rgba(245,158,11,0.12), 0 0 40px rgba(239,68,68,0.06)',
         }}
       >
         <div
           className={
-            theme === 'dark'
-              ? 'min-h-[63px] min-w-[275px] overflow-hidden rounded-[10px] bg-slate-800'
-              : 'min-h-[63px] min-w-[275px] overflow-hidden rounded-[10px] bg-white'
+            layout === 'register'
+              ? 'rounded-[10px] bg-[#222] overflow-hidden min-w-[275px] min-h-[63px]'
+              : 'rounded-[10px] bg-[#1e2030] overflow-hidden min-w-[275px] min-h-[63px]'
           }
         >
           <div
             ref={captchaRef}
-            className="flex justify-center [&>div]:!rounded-lg"
+            className={
+              layout === 'register'
+                ? 'flex justify-center [&>div]:!rounded-lg -mx-4 -my-2 bg-[#222]'
+                : 'flex justify-center [&>div]:!rounded-lg -mx-4 -my-2'
+            }
             style={{ transform: 'scale(0.92)', transformOrigin: 'center' }}
           />
         </div>
