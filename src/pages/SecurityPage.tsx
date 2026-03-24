@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Shield, ShieldCheck } from 'lucide-react'
-import QRCode from 'react-qr-code'
+import { QRCode } from '@/lib/reactQrCode'
 import { api } from '@/api/client'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'

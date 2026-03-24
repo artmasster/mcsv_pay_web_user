@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import QRCode from 'react-qr-code'
+import { QRCode } from '@/lib/reactQrCode'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { api } from '@/api/client'
 import { Alert } from '@/components/ui/alert'
@@ -18,6 +18,7 @@ type Detail = {
   truewallet_phone: string
   truewallet_full_name: string
   expired_at: string | null
+  fee_user_per_transaction: string
 }
 
 function statusBadge(status: string) {
@@ -88,6 +89,12 @@ export function PaymentDetailPage() {
             <dt className="text-slate-500">ยอดหลัก</dt>
             <dd className="font-medium tabular-nums">฿{d.amount}</dd>
           </div>
+          {d.fee_user_per_transaction ? (
+            <div className="flex justify-between gap-4 py-3">
+              <dt className="text-slate-500">ค่าธรรมเนียม platform</dt>
+              <dd className="font-medium tabular-nums">฿{d.fee_user_per_transaction} / รายการ</dd>
+            </div>
+          ) : null}
           {d.client_reference ? (
             <div className="flex justify-between gap-4 py-3">
               <dt className="text-slate-500">อ้างอิงฝั่งคุณ</dt>

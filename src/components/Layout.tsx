@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutGrid, LogOut, Receipt, Shield } from 'lucide-react'
+import { BookOpen, LayoutGrid, LogOut, Receipt, Shield } from 'lucide-react'
 import { PayLogoMark } from '@/components/PayLogoMark'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/button'
@@ -50,6 +50,10 @@ export function Layout() {
             <NavLink to="/dashboard/security" className={navClass}>
               <Shield className="size-4" />
               ความปลอดภัย
+            </NavLink>
+            <NavLink to="/docs" className={navClass}>
+              <BookOpen className="size-4" />
+              เอกสาร API
             </NavLink>
           </nav>
 

@@ -42,7 +42,7 @@ export function AppDetailPage() {
   useEffect(() => {
     if (!id) return
     api
-      .get<{ items: { id: string; webhook_url: string | null }[] }>('/api/merchant/applications/')
+      .get<{ items: { id: string; webhook_url: string | null }[] }>('/api/merchant/applications')
       .then(({ data }) => {
         const app = data.items.find((x) => x.id === id)
         if (app?.webhook_url) setWebhookUrl(app.webhook_url)

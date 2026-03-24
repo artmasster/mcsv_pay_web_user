@@ -36,6 +36,9 @@
   body {
     @apply min-h-dvh bg-slate-50 font-sans text-slate-900 antialiased;
   }
+  #root {
+    @apply min-h-dvh w-full;
+  }
 }
 
 @property --rainbow-angle {

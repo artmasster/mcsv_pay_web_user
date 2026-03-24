@@ -17,7 +17,30 @@ export function RegisterPage() {
   const [displayName, setDisplayName] = useState('')
   const [err, setErr] = useState('')
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const [captchaBust, setCaptchaBust] = useState(0)
+  const captchaRef = useRef<HTMLDivElement>(null)
+  const widgetIdRef = useRef<number | null>(null)
+
+  const renderCaptcha = useCallback(() => {
+    const w = window as {
+      grecaptcha?: { render: (el: HTMLElement, opts: object) => number; reset: (id: number) => void }
+    }
+    if (!w.grecaptcha?.render || !captchaRef.current) return
+    if (widgetIdRef.current !== null) {
+      w.grecaptcha.reset(widgetIdRef.current)
+      widgetIdRef.current = null
+    }
+    widgetIdRef.current = w.grecaptcha.render(captchaRef.current, {
+      sitekey: RECAPTCHA_SITE_KEY,
+      theme: 'light',
+      callback: (token: string) => setCaptchaToken(token),
+      'expired-callback': () => setCaptchaToken(null),
+      'error-callback': () => setCaptchaToken(null),
+    })
+  }, [])
+
+  useEffect(() => {
+    loadRecaptcha().then(() => renderCaptcha())
+  }, [renderCaptcha])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -38,13 +61,15 @@ export function RegisterPage() {
     } catch (x: unknown) {
       const ax = x as { response?: { data?: { error?: string } } }
       setErr(ax.response?.data?.error || 'สมัครไม่สำเร็จ')
-      setCaptchaBust((n) => n + 1)
+      const w = window as { grecaptcha?: { reset: (id: number) => void } }
+      if (widgetIdRef.current !== null) w.grecaptcha?.reset(widgetIdRef.current)
+      setCaptchaToken(null)
     }
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 px-4 py-10">
-      <Card className="w-full max-w-md shadow-lg">
+    <div className="flex min-h-dvh w-full min-w-0 flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 px-4 py-10 sm:px-6">
+      <Card className="w-full max-w-md shrink-0 shadow-lg">
         <div className="flex flex-col items-center text-center">
           <PayLogoMark className="size-12 shadow-sm" />
           <CardTitle className="mt-4 text-xl">สร้างบัญชี merchant</CardTitle>
@@ -85,12 +110,28 @@ export function RegisterPage() {
           {err ? (
             <Alert variant="error">{err}</Alert>
           ) : null}
-          <RecaptchaField
-            layout="register"
-            captchaToken={captchaToken}
-            onTokenChange={setCaptchaToken}
-            captchaBust={captchaBust}
-          />
+          <div className="my-6 flex justify-center">
+            <div
+              className="rounded-xl p-[2px] transition-all duration-700"
+              style={{
+                background: captchaToken
+                  ? 'linear-gradient(135deg, #10b981, #06b6d4, #10b981)'
+                  : 'linear-gradient(135deg, #f59e0b, #ef4444, #f59e0b)',
+                boxShadow: captchaToken
+                  ? '0 0 20px rgba(16,185,129,0.15), 0 0 40px rgba(6,182,212,0.08)'
+                  : '0 0 20px rgba(245,158,11,0.12), 0 0 40px rgba(239,68,68,0.06)',
+              }}
+            >
+              <div className="min-h-[63px] min-w-[275px] overflow-hidden rounded-[10px] bg-white">
+                <div
+                  className="-mx-4 -my-2 flex justify-center bg-white [&_.g-recaptcha]:!rounded-lg [&_.g-recaptcha]:!bg-white"
+                  style={{ transform: 'scale(0.92)', transformOrigin: 'center' }}
+                >
+                  <div ref={captchaRef} />
+                </div>
+              </div>
+            </div>
+          </div>
           <Button type="submit" className="w-full" disabled={!captchaToken}>
             สมัครใช้งาน
           </Button>

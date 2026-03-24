@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   ArrowRight,
   BadgePercent,
@@ -14,6 +15,7 @@ import {
   Webhook,
   Zap,
 } from 'lucide-react'
+import { api } from '@/api/client'
 import { PayLogoMark } from '@/components/PayLogoMark'
 import { publicApiOrigin } from '@/config/pay'
 import { PublicNav } from '@/components/PublicNav'
@@ -22,6 +24,14 @@ import { LinkButton } from '@/components/ui/link-button'
 
 export function LandingPage() {
   const logged = !!localStorage.getItem('pay_merchant_token')
+  const [feeUserPerTxn, setFeeUserPerTxn] = useState('8')
+
+  useEffect(() => {
+    api
+      .get<{ fee_user_per_transaction: string }>('/api/public/fees')
+      .then(({ data }) => setFeeUserPerTxn(data.fee_user_per_transaction))
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="min-h-dvh bg-white">
@@ -212,7 +222,7 @@ export function LandingPage() {
                   </p>
                   <div className="mt-3 flex items-baseline justify-center gap-1">
                     <span className="text-5xl font-extrabold tracking-tight text-slate-900">
-                      8
+                      {feeUserPerTxn}
                     </span>
                     <span className="ml-1 text-lg font-bold text-slate-500">บาท</span>
                   </div>
@@ -244,14 +254,10 @@ export function LandingPage() {
                     ไม่ว่ายอดเท่าไหร่ ค่าธรรมเนียมเท่ากัน
                   </p>
                   <div className="mt-3 grid grid-cols-3 gap-3 text-center">
-                    {[
-                      { amount: '50฿', fee: '8฿' },
-                      { amount: '500฿', fee: '8฿' },
-                      { amount: '5,000฿', fee: '8฿' },
-                    ].map((ex) => (
-                      <div key={ex.amount} className="rounded-lg bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200">
-                        <div className="text-xs text-slate-500">ยอด {ex.amount}</div>
-                        <div className="mt-0.5 text-sm font-bold text-emerald-600">{ex.fee}</div>
+                    {['50฿', '500฿', '5,000฿'].map((amount) => (
+                      <div key={amount} className="rounded-lg bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200">
+                        <div className="text-xs text-slate-500">ยอด {amount}</div>
+                        <div className="mt-0.5 text-sm font-bold text-emerald-600">฿{feeUserPerTxn}</div>
                       </div>
                     ))}
                   </div>

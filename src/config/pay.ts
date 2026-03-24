@@ -1,9 +1,10 @@
 /**
  * ศูนย์กลางค่า environment สำหรับ MCSV Pay web-user
  *
- * - VITE_API_URL — base URL ของ axios (ว่าง = same-origin: หน้าเว็บเดียวกับที่เปิด + path /api/...)
- *   ใส่เฉพาะ origin เช่น https://pay.mcsv.me หรือ https://api-pay.mcsv.me
- *   ห้ามใส่ path /api ต่อท้าย (จะถูกตัดออกอัตโนมัติ)
+ * - VITE_API_URL — base URL ของ axios
+ *   production (`.env.production`): `https://api-pay.mcsv.me` — เรียก `/api/...` บนโดเมน API
+ *   ว่าง = same-origin `/api` บนโดเมนหน้าเว็บ (dev / fallback)
+ *   ห้าม path /api ต่อท้าย origin (จะถูกตัดออกอัตโนมัติ)
  *
  * - VITE_PAY_PUBLIC_API_ORIGIN — โดเมนสำหรับ merchant เรียก REST ภายนอก (POST /v1/payments)
  *   default: https://api-pay.mcsv.me

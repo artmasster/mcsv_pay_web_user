@@ -33,9 +33,10 @@ export function DashboardPage() {
   const [slug, setSlug] = useState('')
   const [err, setErr] = useState('')
   const [secretInfo, setSecretInfo] = useState<string | null>(null)
+  const [feeUserPerTxn, setFeeUserPerTxn] = useState<string | null>(null)
 
   async function load() {
-    const { data } = await api.get<{ items: AppRow[] }>('/api/merchant/applications/')
+    const { data } = await api.get<{ items: AppRow[] }>('/api/merchant/applications')
     setItems(data.items)
   }
 
@@ -43,12 +44,19 @@ export function DashboardPage() {
     load().catch(() => setErr('โหลดแอปไม่ได้'))
   }, [])
 
+  useEffect(() => {
+    api
+      .get<{ fee_user_per_transaction: string }>('/api/public/fees')
+      .then(({ data }) => setFeeUserPerTxn(data.fee_user_per_transaction))
+      .catch(() => setFeeUserPerTxn(null))
+  }, [])
+
   async function create(e: React.FormEvent) {
     e.preventDefault()
     setErr('')
     setSecretInfo(null)
     try {
-      const { data } = await api.post<{ webhook_secret?: string }>('/api/merchant/applications/', {
+      const { data } = await api.post<{ webhook_secret?: string }>('/api/merchant/applications', {
         name,
         slug,
       })
@@ -75,6 +83,11 @@ export function DashboardPage() {
           <>
             แยกคีย์และ webhook ต่อระบบ — เรียก API สร้างรายการชำระด้วย{' '}
             <Code>POST /v1/payments</Code>
+            {feeUserPerTxn ? (
+              <span className="mt-2 block text-slate-600">
+                ค่าธรรมเนียม platform ฿{feeUserPerTxn} ต่อธุรกรรมที่ชำระสำเร็จ (ไม่รวมยอดที่ลูกค้าโอน)
+              </span>
+            ) : null}
           </>
         }
       />

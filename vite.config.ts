@@ -15,7 +15,6 @@ export default defineConfig({
     proxy: {
       '/api': 'http://127.0.0.1:4002',
       '/v1': 'http://127.0.0.1:4002',
-      '/webhooks': 'http://127.0.0.1:4002',
       '/health': 'http://127.0.0.1:4002',
     },
   },

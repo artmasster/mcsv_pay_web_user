@@ -31,14 +31,18 @@ function payBadge(status: string) {
 export function PaymentsPage() {
   const [items, setItems] = useState<PayRow[]>([])
   const [total, setTotal] = useState(0)
+  const [feeUserPerTxn, setFeeUserPerTxn] = useState<string | null>(null)
   const [err, setErr] = useState('')
 
   useEffect(() => {
     api
-      .get<{ items: PayRow[]; total: number }>('/api/merchant/payments/')
+      .get<{ items: PayRow[]; total: number; fee_user_per_transaction?: string }>(
+        '/api/merchant/payments',
+      )
       .then(({ data }) => {
         setItems(data.items)
         setTotal(data.total)
+        if (data.fee_user_per_transaction) setFeeUserPerTxn(data.fee_user_per_transaction)
       })
       .catch(() => setErr('โหลดไม่ได้'))
   }, [])
@@ -50,6 +54,11 @@ export function PaymentsPage() {
         description={
           <>
             ทั้งหมด <strong>{total}</strong> รายการ · แสดงล่าสุดสูงสุด 50 รายการ
+            {feeUserPerTxn ? (
+              <span className="mt-2 block text-slate-600">
+                ค่าธรรมเนียม platform ฿{feeUserPerTxn} ต่อรายการที่ชำระสำเร็จ
+              </span>
+            ) : null}
           </>
         }
       />

@@ -34,6 +34,9 @@ export function PublicNav() {
           <Link to="/" className={navLinkClass()}>
             หน้าแรก
           </Link>
+          <Link to="/docs" className={navLinkClass()}>
+            เอกสาร API
+          </Link>
           {logged ? (
             <>
               <Link to="/dashboard" className={navLinkClass()}>

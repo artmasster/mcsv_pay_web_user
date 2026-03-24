@@ -30,7 +30,7 @@ export function LoginPage() {
     if (!w.grecaptcha?.render) return
     widgetIdRef.current = w.grecaptcha.render(captchaRef.current, {
       sitekey: RECAPTCHA_SITE_KEY,
-      theme: 'dark',
+      theme: 'light',
       callback: (token: string) => setCaptchaToken(token),
       'expired-callback': () => setCaptchaToken(null),
     })
@@ -97,8 +97,8 @@ export function LoginPage() {
 
   if (needs2fa) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 px-4 py-10">
-        <Card className="w-full max-w-md shadow-lg">
+      <div className="flex min-h-dvh w-full min-w-0 flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 px-4 py-10 sm:px-6">
+        <Card className="w-full max-w-md shrink-0 shadow-lg">
           <div className="flex flex-col items-center text-center">
             <PayLogoMark className="size-12 shadow-sm" />
             <CardTitle className="mt-4 text-xl">ยืนยันตัวตน 2FA</CardTitle>
@@ -152,8 +152,8 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 px-4 py-10">
-      <Card className="w-full max-w-md shadow-lg">
+    <div className="flex min-h-dvh w-full min-w-0 flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 px-4 py-10 sm:px-6">
+      <Card className="w-full max-w-md shrink-0 shadow-lg">
         <div className="flex flex-col items-center text-center">
           <PayLogoMark className="size-12 shadow-sm" />
           <CardTitle className="mt-4 text-xl">เข้าสู่ระบบ</CardTitle>
@@ -195,12 +195,13 @@ export function LoginPage() {
                   : '0 0 20px rgba(245,158,11,0.12), 0 0 40px rgba(239,68,68,0.06)',
               }}
             >
-              <div className="min-h-[63px] min-w-[275px] overflow-hidden rounded-[10px] bg-[#1e2030]">
+              <div className="min-h-[63px] min-w-[275px] overflow-hidden rounded-[10px] bg-white">
                 <div
-                  ref={captchaRef}
-                  className="-mx-4 -my-2 flex justify-center [&>div]:!rounded-lg"
+                  className="-mx-4 -my-2 flex justify-center bg-white [&_.g-recaptcha]:!rounded-lg [&_.g-recaptcha]:!bg-white"
                   style={{ transform: 'scale(0.92)', transformOrigin: 'center' }}
-                />
+                >
+                  <div ref={captchaRef} />
+                </div>
               </div>
             </div>
           </div>

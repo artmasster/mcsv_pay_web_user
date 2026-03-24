@@ -8,6 +8,7 @@ import { AppDetailPage } from './pages/AppDetailPage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import { PaymentDetailPage } from './pages/PaymentDetailPage'
 import { SecurityPage } from './pages/SecurityPage'
+import { DocsPage } from './pages/DocsPage'
 
 function Private({ children }: { children: React.ReactNode }) {
   const t = localStorage.getItem('pay_merchant_token')
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/docs" element={<DocsPage />} />
         <Route
           path="/dashboard"
           element={
